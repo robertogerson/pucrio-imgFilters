@@ -1368,8 +1368,8 @@ static int cuboCorte(colorCube* cubeVec, int numCubos)
 
 Image* imgReduceColors(Image * img0, int maxCores)
 {
-    int w = imgGetWidth(img0);
-    int h = imgGetHeight(img0);
+  int w = imgGetWidth(img0);
+  int h = imgGetHeight(img0);
 	Image* img1=imgCreate(w,h,3);
 
     int x,y,i,j,numCubos = 0;
@@ -1451,70 +1451,96 @@ Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
   int x, y, newx, newy;
   float rgb[3];
   double dx, dy, d, a;
+	rad = sqrt(((w*w)+(h*h)))/2.0;
 
   //Image* img1 = imgCopy(img);
   Image* img1 = imgCreate(w, h, img->dcs);
+  double radius2 = rad*rad;
 
   for (y=0; y<h; y++){
     for (x=0; x<w; x++){
       dx = (double)x-xc;
       dy = (double)y-yc;
-      d = sqrt(dx*dx+dy*dy);
+      d = dx*dx+dy*dy;
       imgGetPixel3fv(img, x, y, rgb);
-//      if (d < rad)
-//      {
+      
+			if (d <= radius2)
+      {
+			  d = sqrt(d);
         a = atan2(dy, dx) + angle*(rad-d)/rad;
-	newx = xc + d*cos(a);
-	newy = yc + d*sin(a);
-	if(newx < 0) newx = 0;
-	if(newy < 0) newy = 0;
-	if(newx >= w) newx = w-1;
-	if(newy >= h) newy = h-1;
-	
-//      } 
-//      else 
-//      {
-//        newx = x; newy = y;
-//      }
+				newx = xc + d*cos(a);
+        newy = yc + d*sin(a);
 
+				/* out of range */
+				if(newx < 0) newx = 0;
+	      if(newy < 0) newy = 0;
+	      if(newx >= w) newx = w-1;
+        if(newy >= h) newy = h-1;	
+      } 
+      else 
+      {
+        newx = x; newy = y;
+      }
       imgSetPixel3fv(img1, newx, newy, rgb);
     }
   }
   return img1;
 }
 
+
 Image* imgSphere( Image *img, double xc, double yc, double radius, double refr)
 {
   int w = imgGetWidth(img);
   int h = imgGetHeight(img);
-  int x, y, newx, newy;
-  float rgb[3];
-  double dx, dy, r, betax, betay, z;
+  int x, y, newx, newy, x2, y2, z, z2;
+  double dx, dy, d2;
+
+  double radius2 = radius*radius;
+  double a = (double)w/2.0, b = (double)h/2.0;	
+  double a2 = a*a, b2 = b*b;
+	double invRefr = 1.0f/refr;
+
+	double xAngle, yAngle, angle1, angle2;
 
   Image* img1 = imgCopy(img);
+//  Image* img1 = imgCreate(w, h, img->dcs);
+  float rgb[3];
 
   for (y=0; y<h; y++){
     for (x=0; x<w; x++){
       dx = (double)x-xc;
       dy = (double)y-yc;
-      r = sqrt(dx*dx+dy*dy);
-      imgGetPixel3fv(img, x, y, rgb);
+      x2 = dx*dx; y2 = dy*dy;
 
-      if (r <= radius)
+      if (y2 < (b2-(b2*x2)/a2))
       {
-        z = sqrt(radius*radius-r*r);
+        z = sqrt((1.0f- (double)x2/(double)a2 - (double)y2/b2)*(a*b));
+				z2 = z*z;
+				xAngle = asin(dx/(sqrt(d2+z2)));
+				angle1 = M_PI_2 - xAngle;
+				angle2 = asin(sin(angle1)*invRefr);
+				angle2 = M_PI_2 - xAngle - angle2;
+        newx = x - (double)z*tan(angle2);
 
-        betax = (1-1/refr)*asin(dx/(sqrt(dx*dx+z*z)));
-        betay = (1-1/refr)*asin(dy/(sqrt(dy*dy+z*z)));
-	
-        newx = x - z*tan(betax);
-	newy = y - z*tan(betay);
+				yAngle = acos(dy/(sqrt(y2+z2)));
+				angle1 = M_PI_2 - yAngle;
+				angle2 = asin(sin(angle1)*invRefr);
+				angle2 = M_PI_2 - yAngle - angle2; 
+	      newy = y - (double)z*tan(angle2);
+
+        /* out of range */
+				if(newx < 0) newx = 0;
+	      if(newy < 0) newy = 0;
+	      if(newx >= w) newx = w-1;
+        if(newy >= h) newy = h-1;	
+
       } 
       else 
       {
         newx = x; newy = y;
       }
 
+      imgGetPixel3fv(img, x, y, rgb);
       imgSetPixel3fv(img1,newx,newy,rgb);
     }
   }

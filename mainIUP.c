@@ -22,14 +22,13 @@
 #include <iupcontrols.h>            /* interface para as funcoes de botoes de controle */ 
 
 #ifdef WIN32
-#include <windows.h>                /* inclui as definicoes do windows para o OpenGL */
-#include <gl/gl.h>                  /* prototypes do OpenGL */
-#include <gl/glu.h>                 /* prototypes do OpenGL */
-
+  #include <windows.h>                /* inclui as definicoes do windows para o OpenGL */
+  #include <gl/gl.h>                  /* prototypes do OpenGL */
+  #include <gl/glu.h>                 /* prototypes do OpenGL */
 #else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+  #include <GL/gl.h>
+  #include <GL/glu.h>
+#endif /*WIN32*/
 
 
 #include "image.h"                  /* TAD para imagem */
@@ -350,7 +349,7 @@ int sphere_cb(void)
 
   xc = imgGetWidth(image1)/2.0;
   yc = imgGetHeight(image1)/2.0;
-  rmax = xc;
+  rmax = xc/2.0;
   refr = 1.5;
 
 
@@ -395,7 +394,7 @@ int load_cb(void) {
       if (image2) imgDestroy(image2);
       image2 = imgCopy(image1);
       }
- else
+  else
       IupMessage("Aviso","Formato do arquivo de imagem não reconhecido\n");
  
 
@@ -406,7 +405,8 @@ int load_cb(void) {
   repaint_cb1(left_canvas);  /* redesenha o canvas 2 */
   repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
 
-  IupSetfAttribute(label, "TITLE", "%3dx%3d", imgGetWidth(image1), imgGetHeight(image1));
+  IupSetfAttribute( label, "TITLE", "%3dx%3d", imgGetWidth(image1), 
+	                  imgGetHeight(image1));
 
   IupSetFunction("transf_cb", (Icallback)transf_cb);
   IupSetFunction("undo_cb", (Icallback)undo_cb);
@@ -428,17 +428,36 @@ int load_cb(void) {
 
 }
 
+
+/*-------------------------------------------------------------------------*/
+/* Incializa os controles geometricos do                                   */
+/*-------------------------------------------------------------------------*/
+Ihandle *init_geometric_controls(void)
+{
+  Ihandle *frm_geom;
+  Ihandle *twirl, *sphere, *water;
+
+  //Geometric operations
+  twirl = IupButton("Twirl", "twirl_cb");
+  sphere = IupButton("Sphere", "sphere_cb");
+  water = IupButton("Water", "water_cb");
+	
+	frm_geom = IupFrame( IupHbox ( twirl, sphere, NULL));
+	IupSetAttribute(frm_geom, "TITLE", "Geometric Operations");
+
+	return frm_geom;
+
+}
+
 /*-------------------------------------------------------------------------*/
 /* Incializa o programa.                                                   */
 /*-------------------------------------------------------------------------*/
-
 int init(void)
 {
-  Ihandle *toolbar, *statusbar,  *box;
-  Ihandle  *load, * transf, *conta, *reduz, *gauss, *mediana, *arestas, *dif, *undo, *save;
+  Ihandle *toolbar, *statusbar, *box;
+  Ihandle *load, *transf, *conta, *reduz, *gauss, *mediana, *arestas, *dif, 
+          *undo, *save;
 
-  //Geometric transformations
-  Ihandle *twirl, *sphere;
   time_t now = time(NULL);  /* obtem a data corrente para registro no arquivo de log */
 
   /* creates the toolbar and its buttons */
@@ -446,7 +465,6 @@ int init(void)
   IupSetAttribute(load,"TIP","Carrega uma imagem.");
   IupSetAttribute(load,"IMAGE","IUP_FileOpen");
   IupSetFunction("load_cb", (Icallback)load_cb);
-
  
   transf = IupButton("", "transf_cb");
   IupSetAttribute(transf,"IMAGE","IUP_ArrowRight");
@@ -467,19 +485,17 @@ int init(void)
   arestas = IupButton("Arestas", "arestas_cb");
   dif =    IupButton("Dif.", "dif_cb");
 
-  //Geometric transform
-  twirl = IupButton("Twirl", "twirl_cb");
-  sphere = IupButton("Sphere", "sphere_cb");
   
   toolbar = IupHbox(
       load, 
       transf,
       IupFill(),
-	  conta, reduz, gauss, mediana, arestas, dif, twirl, sphere,
+	    conta, reduz, gauss, mediana, arestas, dif, 
+			init_geometric_controls(),
       IupFill(),
       undo,
       save,
-     NULL);
+      NULL);
 
   IupSetAttribute(toolbar, "FONT", "HELVETICA_NORMAL_8");
   IupSetAttribute(toolbar, "ALIGNMENT", "ACENTER");
