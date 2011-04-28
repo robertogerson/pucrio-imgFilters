@@ -1444,12 +1444,36 @@ Image* imgReduceColors(Image * img0, int maxCores)
 }
 
 /*************************** GEOMETRIC TRANSFORM *****************************/
+void imgBillinearInterpolate(float xW, float yW, float* nw, 
+                             float *ne, float *sw, float *se, float *result)
+{
+  float cx = 1.0f - xW;
+	float cy = 1.0f - yW;
+
+	float m0, m1;
+	/* red */
+  m0 = cx*nw[0] + xW*ne[0];
+	m1 = cx*sw[0] + xW*se[0];
+	result[0] = (cy*m0 + yW*m1);
+
+  /* green */
+  m0 = cx*nw[1] + xW*ne[1];
+	m1 = cx*sw[1] + xW*se[1];
+	result[1] = (cy*m0 + yW*m1);
+
+  /* blue */
+	m0 = cx*nw[2] + xW*ne[2];
+	m1 = cx*sw[2] + xW*sw[1];
+	result[2] = (cy*m0 + yW*m1);
+}
+
 Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
 {
   int w = imgGetWidth(img);
   int h = imgGetHeight(img);
-  int x, y, newx, newy;
-  float rgb[3];
+  int x, y;
+	double newx, newy;
+  float rgb[3], nw[3], ne[3], sw[3], se[3];
   double dx, dy, d, a;
 	rad = sqrt(((w*w)+(h*h)))/2.0;
 
@@ -1463,25 +1487,35 @@ Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
       dy = (double)y-yc;
       d = dx*dx+dy*dy;
       imgGetPixel3fv(img, x, y, rgb);
-      
-			if (d <= radius2)
-      {
-			  d = sqrt(d);
-        a = atan2(dy, dx) + angle*(rad-d)/rad;
-				newx = xc + d*cos(a);
-        newy = yc + d*sin(a);
 
-				/* out of range */
-				if(newx < 0) newx = 0;
-	      if(newy < 0) newy = 0;
-	      if(newx >= w) newx = w-1;
-        if(newy >= h) newy = h-1;	
+			if (d > radius2)
+      {
+        newx = x; newy = y;
       } 
       else 
       {
-        newx = x; newy = y;
+				d = sqrt(d);
+        a = atan2(dy, dx) + angle*(rad-d)/rad;
+				newx = xc + d*cos(a);
+        newy = yc + d*sin(a);
       }
-      imgSetPixel3fv(img1, newx, newy, rgb);
+
+      //Bilinear Interpolation
+      if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1)) {
+   		  // Easy case, all corners are in the image
+				imgGetPixel3fv(img, newx, newy, nw);
+				imgGetPixel3fv(img, newx+1, newy, ne);
+				imgGetPixel3fv(img, newx, newy+1, sw);
+				imgGetPixel3fv(img, newx+1, newy+1, se);
+				imgBillinearInterpolate( newx-floor(newx), newy-floor(newy),
+				                         nw, ne, sw, se, rgb);
+      }
+			else
+			{
+			  rgb[0] = rgb[1] = rgb[2] = 0;
+			}
+
+      imgSetPixel3fv(img1, x, y, rgb);
     }
   }
   return img1;
@@ -1492,31 +1526,40 @@ Image* imgSphere( Image *img, double xc, double yc, double radius, double refr)
 {
   int w = imgGetWidth(img);
   int h = imgGetHeight(img);
-  int x, y, newx, newy, x2, y2, z, z2;
+  int x, y;
+  double newx, newy;
+	
+	double x2, y2, z, z2;
   double dx, dy, d2;
 
   double radius2 = radius*radius;
-  double a = (double)w/2.0, b = (double)h/2.0;	
+
+  double a, b;	
+	a = b = radius;
   double a2 = a*a, b2 = b*b;
 	double invRefr = 1.0f/refr;
 
 	double xAngle, yAngle, angle1, angle2;
 
-  Image* img1 = imgCopy(img);
-//  Image* img1 = imgCreate(w, h, img->dcs);
-  float rgb[3];
+  Image* img1 = imgCreate(w, h, img->dcs);
+  float rgb[3], nw[3], ne[3], sw[3], se[3];
 
   for (y=0; y<h; y++){
     for (x=0; x<w; x++){
       dx = (double)x-xc;
       dy = (double)y-yc;
-      x2 = dx*dx; y2 = dy*dy;
+      x2 = (double) (dx*dx); y2 = (double)(dy*dy);
 
-      if (y2 < (b2-(b2*x2)/a2))
+      if (y2 >= (b2-(b2*x2)/a2))
       {
-        z = sqrt((1.0f- (double)x2/(double)a2 - (double)y2/b2)*(a*b));
+			  newx = x; newy = y;
+      } 
+      else 
+      {
+			  z = sqrt((1.0 - x2/a2 - y2/b2)*(a*b));
 				z2 = z*z;
-				xAngle = asin(dx/(sqrt(d2+z2)));
+
+        xAngle = acos(dx/(sqrt(x2+z2)));
 				angle1 = M_PI_2 - xAngle;
 				angle2 = asin(sin(angle1)*invRefr);
 				angle2 = M_PI_2 - xAngle - angle2;
@@ -1527,23 +1570,134 @@ Image* imgSphere( Image *img, double xc, double yc, double radius, double refr)
 				angle2 = asin(sin(angle1)*invRefr);
 				angle2 = M_PI_2 - yAngle - angle2; 
 	      newy = y - (double)z*tan(angle2);
-
-        /* out of range */
-				if(newx < 0) newx = 0;
-	      if(newy < 0) newy = 0;
-	      if(newx >= w) newx = w-1;
-        if(newy >= h) newy = h-1;	
-
-      } 
-      else 
-      {
-        newx = x; newy = y;
       }
+      
+			//Bilinear Interpolation
+      if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1)) {
+   		  // Easy case, all corners are in the image
+				imgGetPixel3fv(img, newx, newy, nw);
+				imgGetPixel3fv(img, newx+1, newy, ne);
+				imgGetPixel3fv(img, newx, newy+1, sw);
+				imgGetPixel3fv(img, newx+1, newy+1, se);
+      
+			}
+			else
+			{
+			  if (newx < 0 || newx >= w || newy < 0 || newy >= h)
+			    nw[0] = nw[1] = nw[2] = 1.0;
+				else
+				  imgGetPixel3fv(img, newx, newy, nw);
 
-      imgGetPixel3fv(img, x, y, rgb);
-      imgSetPixel3fv(img1,newx,newy,rgb);
+				if (newx+1 < 0 || newx+1 >= w || newy < 0 || newy >= h)
+			    ne[0] = ne[1] = ne[2] = 1.0;
+				else
+				  imgGetPixel3fv(img, newx+1, newy, ne);
+				
+				if (newx < 0 || newx >= w || newy+1 < 0 || newy+1 >= h)
+			    sw[0] = sw[1] = sw[2] = 1.0;
+				else
+				  imgGetPixel3fv(img, newx, newy+1, sw);
+				
+				if (newx+1 < 0 || newx+1 >= w || newy+1 < 0 || newy+1 >= h)
+			    se[0] = se[1] = se[2] = 1.0;
+				else
+				  imgGetPixel3fv(img, newx+1, newy+1, se);
+			}
+      imgBillinearInterpolate( newx-floor(newx), newy-floor(newy),
+			                         nw, ne, sw, se, rgb);
+
+      imgSetPixel3fv(img1, x, y, rgb);
     }
   }
   return img1;
+}
 
+Image *imgPerspective(Image *img,
+				double x0, double y0,
+				double x1, double y1,
+				double x2, double y2,
+				double x3, double y3)
+{
+  int w = imgGetWidth(img);
+	int h = imgGetHeight(img);
+
+  Image *img1 = imgCreate(w, h, img->dcs);
+  float rgb[3];
+  
+	double dx1, dy1, dx2, dy2, dx3, dy3; /* deltas */
+  double a11, a12, a13; /* coeficientes */
+	double a21, a22, a23; /* coeficientes */
+	double a31, a32;      /* coeficientes */
+
+  int x, y; /* cordenadas da imagem de origem */
+	double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
+	double newx, newy; /* coordenadas reais na imagem de destino */
+
+  double A, B, C, D, E, F, G, H, I; /* coeficientes intermediarios */
+
+	dx1 = x1-x2; dy1 = y1-y2;
+	dx2 = x3-x2; dy2 = y3-y2;
+	dx3 = x0-x1+x2-x3; dy3 = y0-y1+y2-y3;
+
+  if ((dx3 == 0.0) && (dy3 == 0.0)) /*eh uma transf. afim? */
+	{
+    a11 = x1-x0;
+		a21 = x2-x1; 
+		a31 = x0;
+
+		a12 = y1-y0;
+		a22 = y2-y1;
+		a32 = y0;
+		
+		a13 = 0.0;
+		a23 = 0.0;
+	}
+	else
+	{
+	  a13 = (dx3*dy2-dx2*dy3)/(dx1*dy2-dy1*dx2);
+		a23 = (dx1*dy3-dy1*dx3)/(dx1*dy2-dy1*dx2);
+
+		a11 = x1 - x0 + a13*x1;
+		a21 = x3 - x0 + a23*x3;
+
+		a31 = x0;
+
+		a12 = y1-y0+a13*y1;
+		a22 = y3-y0+a23*y3;
+		a32 = y0;
+	}
+
+	A = a22 - a32*a23;
+	B = a31*a23 - a21;
+	C = a21*a32 - a31*a22;
+  D = a32*a13 - a12;
+	E = a11 - a31*a13;
+	F = a31*a12 - a11*a32;
+	G = a12*a23 - a22*a13;
+	H = a21*a13 - a11*a23;
+  I = a11*a22 - a21*a12;
+
+  for (y=0; y<h; y++){
+	  dby = (double)y/(double)h;
+    for (x=0; x<w; x++){
+		  dbx = (double)x/(double)w;
+
+		  newx = (A*x + B*y + C)/(G*x+H*y+I)*w;
+		  newy = (D*x + E*y + F)/(G*x+H*y+I)*h;
+			
+      if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
+			{
+        imgGetPixel3fv(img, newx+1, newy+1, rgb);
+			}
+			else
+			{
+			  rgb[0] = rgb[1] = rgb[2] = 0;
+			}
+
+      //TODO: Bilinear Mapping
+			imgSetPixel3fv(img1, x, y, rgb);
+
+		}
+  }
+  return img1;
 }

@@ -179,13 +179,13 @@ int transf_cb(void)
 
 int undo_cb(void)
 {
-    Image* tmp = image2;
-    image2 = undo;
-    undo = tmp;
-    repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
-   IupSetfAttribute(label, "TITLE", "Undo");
-   fprintf(fpLog,"UNDO\n");
-   return IUP_DEFAULT;
+  Image* tmp = image2;
+  image2 = undo;
+  undo = tmp;
+  repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+  IupSetfAttribute(label, "TITLE", "Undo");
+  fprintf(fpLog,"UNDO\n");
+  return IUP_DEFAULT;
 }
 
 
@@ -296,9 +296,9 @@ int arestas_cb(void)
    double duration;
    IupSetfAttribute(label, "TITLE", "Calculando as arestas da imagem...por favor aguarde...");
 
-    /* salva a imagem corrente para acao de undo */
-    if (undo) imgDestroy(undo);
-    undo = image2;
+   /* salva a imagem corrente para acao de undo */
+   if (undo) imgDestroy(undo);
+   undo = image2;
 
    start_time =  clock();
    image2=imgEdges(image2);
@@ -323,6 +323,35 @@ int dif_cb(void)
   return IUP_DEFAULT;
 }
 
+int gamma_cb(void)
+{
+  int w, h, i, x, y;
+	float rgb[3], gamma=10.00;
+  /* salva a imagem corrente para acao de undo */
+  w = imgGetWidth(image1);
+	h = imgGetHeight(image1);
+  float rGamma[256], gGamma[256], bGamma[256];
+  for(i=0; i<256; i++)
+	{
+	  rGamma[i]=pow(i/255.00, 1.0/gamma);
+		if( rGamma[i] > 1.0) rGamma[i] = 1.0;
+		if( gGamma[i] > 1.0) gGamma[i] = 1.0;
+		if( bGamma[i] > 1.0) bGamma[i] = 1.0; 
+	}
+
+	for(y=0; y<h; y++)
+	  for(x=0; x<w; x++)
+		{
+      imgGetPixel3fv(image2, x, y, rgb);
+      rgb[0] = rGamma[(int)(floor(255*rgb[0]))];
+      rgb[1] = gGamma[(int)(floor(255*rgb[1]))];
+      rgb[2] = bGamma[(int)(floor(255*rgb[2]))];
+      imgSetPixel3fv(image2, x, y, rgb);
+		}
+
+  return IUP_DEFAULT;  
+}
+
 int twirl_cb(void)
 {
   printf("Twirl transform\n");
@@ -330,28 +359,31 @@ int twirl_cb(void)
 
   xc = imgGetWidth(image1)/2.0;
   yc = imgGetHeight(image1)/2.0;
-  angle = 0.9750491577; //43 graus
+  angle = 70.0/360.0 * M_PI; //43 graus
   rad = sqrt((xc*xc)+(yc*yc))/2.0;
 
   printf("%.2lf %.2lf %.2lf %.2lf\n", xc, yc, angle, rad);
   /* salva a imagem corrente para acao de undo */
   if (undo) imgDestroy(undo);
     undo = image2;
+
+// start_time =  clock();
   image2 = imgTwirl(image2, xc, yc, angle, rad);
-  repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+// finish_time = clock();
+// duration = (double)(finish_time - start_time)/CLOCKS_PER_SEC;
+
+	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;
 }
 
 int sphere_cb(void)
 {
-  printf("Sphere transform\n");
   double xc, yc, rmax, refr;
 
   xc = imgGetWidth(image1)/2.0;
   yc = imgGetHeight(image1)/2.0;
   rmax = xc/2.0;
   refr = 1.5;
-
 
   /* salva a imagem corrente para acao de undo */
   if (undo) imgDestroy(undo);
@@ -360,6 +392,27 @@ int sphere_cb(void)
   repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;
 
+}
+
+int perspective_cb(void)
+{ 
+	int w = imgGetWidth(image1);
+	int h = imgGetHeight(image1);
+
+  double x0 = 0.0, y0 = 0.0;
+  double x1 = w/4, y1 = 2*h/3;
+  double x2 = 3*w/4, y2 = 2*h/3;
+  double x3 = w, y3 = 0.0;
+
+
+  if (undo) imgDestroy(undo);
+    undo = image2;
+
+  image2 = imgPerspective(image2, x0, y0, x1, y1, x2, y2, x3, y3);
+  
+	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+
+  return IUP_DEFAULT;
 }
 
 int save_cb(Ihandle *self)
@@ -416,10 +469,12 @@ int load_cb(void) {
   IupSetFunction("mediana_cb", (Icallback)mediana_cb);
   IupSetFunction("arestas_cb", (Icallback)arestas_cb);
   IupSetFunction("dif_cb", (Icallback)dif_cb);
+  IupSetFunction("gamma_cb", (Icallback)gamma_cb);
 
   //geometric transform
   IupSetFunction("twirl_cb", (Icallback)twirl_cb);
   IupSetFunction("sphere_cb", (Icallback)sphere_cb);
+  IupSetFunction("perspective_cb", (Icallback)perspective_cb);
 
   IupSetFunction("save_cb", (Icallback)save_cb);
   fprintf(fpLog,"OPEN %s\n",filename);
@@ -435,18 +490,73 @@ int load_cb(void) {
 Ihandle *init_geometric_controls(void)
 {
   Ihandle *frm_geom;
-  Ihandle *twirl, *sphere, *water;
+  Ihandle *twirl, *sphere, *perspective, *water;
+	Ihandle *interpolation, *none, *bilinear, *linear, *nearest_neighbor;
 
   //Geometric operations
   twirl = IupButton("Twirl", "twirl_cb");
   sphere = IupButton("Sphere", "sphere_cb");
   water = IupButton("Water", "water_cb");
-	
-	frm_geom = IupFrame( IupHbox ( twirl, sphere, NULL));
-	IupSetAttribute(frm_geom, "TITLE", "Geometric Operations");
+  perspective = IupButton("Perspective", "perspective_cb");
+
+  none = IupToggle ("None", "");
+  linear = IupToggle ("Linear", "");
+  bilinear = IupToggle ("Bilinear", "");
+  nearest_neighbor = IupToggle ("Nearest Neighbor", "");
+
+	interpolation = IupRadio (
+	  IupVbox(
+		  none,
+		  linear,
+			bilinear,
+			nearest_neighbor
+    )
+	);
+
+	frm_geom = IupFrame(
+	  IupHbox(
+//		  IupVbox(
+		    twirl,
+			  sphere,
+				perspective,
+//				NULL),
+//      interpolation,
+			NULL)
+  );
+	IupSetAttribute(frm_geom, "TITLE", "Geometric");
 
 	return frm_geom;
 
+}
+
+Ihandle *init_filter_controls()
+{
+  Ihandle *frm_filters;
+  Ihandle *conta, *reduz, *gauss, *mediana, *arestas, *dif, *gamma;
+
+  conta = IupButton("nCores", "conta_cb");
+  reduz = IupButton("Reduz","reduz_cb");
+  gauss = IupButton("Gauss","gauss_cb");
+  mediana = IupButton("Mediana","mediana_cb");
+  arestas = IupButton("Arestas", "arestas_cb");
+  dif = IupButton("Dif.", "dif_cb");
+  gamma = IupButton("Gamma", "gamma_cb");
+
+  frm_filters = IupFrame(
+	  IupHbox(
+		  conta,
+			reduz,
+			gauss,
+			mediana,
+			arestas,
+			dif,
+			gamma,
+			NULL
+		)
+	);
+  IupSetAttribute(frm_filters, "TITLE", "Filters");
+
+  return frm_filters;
 }
 
 /*-------------------------------------------------------------------------*/
@@ -455,8 +565,7 @@ Ihandle *init_geometric_controls(void)
 int init(void)
 {
   Ihandle *toolbar, *statusbar, *box;
-  Ihandle *load, *transf, *conta, *reduz, *gauss, *mediana, *arestas, *dif, 
-          *undo, *save;
+  Ihandle *load, *transf, *undo, *save;
 
   time_t now = time(NULL);  /* obtem a data corrente para registro no arquivo de log */
 
@@ -478,19 +587,11 @@ int init(void)
   IupSetAttribute(save,"TIP","Salva imagem processada.");
   IupSetAttribute(save,"IMAGE","IUP_FileSave");
 
-  conta = IupButton("nCores", "conta_cb");
-  reduz = IupButton("Reduz","reduz_cb");
-  gauss = IupButton("Gauss","gauss_cb");
-  mediana = IupButton("Mediana","mediana_cb");
-  arestas = IupButton("Arestas", "arestas_cb");
-  dif =    IupButton("Dif.", "dif_cb");
-
-  
   toolbar = IupHbox(
       load, 
       transf,
       IupFill(),
-	    conta, reduz, gauss, mediana, arestas, dif, 
+	  	init_filter_controls(),
 			init_geometric_controls(),
       IupFill(),
       undo,

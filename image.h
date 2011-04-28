@@ -91,8 +91,8 @@ int imgGetHeight(Image* image);
  *	@param image Handle para uma imagem.
  *	@return  dimensao do espaco de cor de cada pixel (1=lminancia ou 3=RGB) da imagem.
  */
-
 int imgGetDimColorSpace(Image* image);
+
 /**
  *	Obtem as dimensoes de uma imagem.
  *
@@ -267,9 +267,23 @@ Image* imgEdges(Image* image);
  */
 Image* imgReduceColors(Image * img, int ncolors);
 
-
-
 /************** Transformações Geométricas *************************/
+/*
+ * Interpolação bilinear.
+ *
+ * @param xWeight parametro de interpolação x [0..1]
+ * @param yWeight parametro de interpolação y [0..1]
+ * @param nw cor a noroeste da posição atual (float[3])
+ * @param ne cor a nordeste da posição atual (float[3])
+ * @param sw cor a sudoeste da posição atual (float[3])
+ * @param se cor a sudeste da posição atual (float[3])
+*
+ * @param result cor resultante da interpolção bilinear.
+ *
+ */
+void imgBillinearInterpolate(float xWeight, float yWeight, float* nw, 
+                             float *ne, float *sw, float *se, float *result);
+
 /*
  * Aplica a transformação geométrica Twirl
  *
@@ -294,7 +308,23 @@ Image* imgTwirl( Image *img, double xc, double yc, double angle, double rad);
  *
  * @return Handle para a imagem deformada.
  */
-Image* imgSphere( Image *img, double xc, double yc, double radius, double refr);
+Image* imgSphere( Image *img, double xc, double yc, double radius,
+                  double refr);
+
+/*
+ * Aplica a transformação perspectiva (ou projetiva) na imagem.
+ *
+ * @param img Handle para a image original.
+ * @param x0, y0, x1, y1, x2, y2, x3, y3 pontos de controle de destino.
+ *
+ * @return Handle para a imagem deformada.
+ */
+
+Image *imgPerspective(Image *img,
+				double x0, double y0,
+				double x1, double y1,
+				double x2, double y2,
+			double x3, double y3);
 
 #endif
 
