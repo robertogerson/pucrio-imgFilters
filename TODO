@@ -1,0 +1,20 @@
+This is the TODO list for imgfilters
+
+* IMAGE
+				- Load other image types:
+								- PNG
+								- JPEG
+								- ...
+
+* NEW FILTERS
+				- 
+				- 
+
+* NEW INTERPOLATORS
+				- Linear
+				- Trilinear
+				- 
+
+* GUI
+				- Windows to enable users to change parameters of filters.
+

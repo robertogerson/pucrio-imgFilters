@@ -349,12 +349,13 @@ int gamma_cb(void)
       imgSetPixel3fv(image2, x, y, rgb);
 		}
 
+  repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;  
 }
 
 int twirl_cb(void)
 {
-  printf("Twirl transform\n");
+//  printf("Twirl transform\n");
   double xc, yc, angle, rad;
 
   xc = imgGetWidth(image1)/2.0;
@@ -362,7 +363,7 @@ int twirl_cb(void)
   angle = 70.0/360.0 * M_PI; //43 graus
   rad = sqrt((xc*xc)+(yc*yc))/2.0;
 
-  printf("%.2lf %.2lf %.2lf %.2lf\n", xc, yc, angle, rad);
+//  printf("%.2lf %.2lf %.2lf %.2lf\n", xc, yc, angle, rad);
   /* salva a imagem corrente para acao de undo */
   if (undo) imgDestroy(undo);
     undo = image2;
@@ -400,9 +401,10 @@ int perspective_cb(void)
 	int h = imgGetHeight(image1);
 
   double x0 = 0.0, y0 = 0.0;
-  double x1 = w/4, y1 = 2*h/3;
+  double x1 = w, y1 = 0.0;
   double x2 = 3*w/4, y2 = 2*h/3;
-  double x3 = w, y3 = 0.0;
+  double x3 = w/4, y3 = 2*h/3;
+
 
 
   if (undo) imgDestroy(undo);
