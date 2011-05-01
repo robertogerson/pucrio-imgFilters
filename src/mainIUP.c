@@ -35,12 +35,15 @@
 
 /*- Contexto do Programa: -------------------------------------------------*/
 Image   *image1, *image2, *undo;          /* imagens dos dois canvas */
+Image   *imageTmp;                        /* imagem temporária, enquanto usuário 
+                                             escolhe os parametros */
 Ihandle *left_canvas, *right_canvas;      /* hadle dos dois canvas */
 Ihandle *label;                           /* handle do label para colocar mensagens para usuario */
 Ihandle *dialog;                          /* handle para o dialogo principal */
 
 FILE *fpLog;            /* arquivo de log que registra as acoes do usuario */
 extern char grupo[]; 
+char pbuffer[200];
 
 /*- Funcoes auxiliares ------------*/
 
@@ -353,6 +356,7 @@ int gamma_cb(void)
   return IUP_DEFAULT;  
 }
 
+
 int twirl_cb(void)
 {
 //  printf("Twirl transform\n");
@@ -395,25 +399,80 @@ int sphere_cb(void)
 
 }
 
+
+int perspective_param_cb(Ihandle* dialog, int n, void* value)
+{
+  float x0, y0, x1, y1, x2, y2, x3, y3;
+	Ihandle* param = (Ihandle*)IupGetAttribute(dialog, "PARAM0");
+
+	x0 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM1");
+	y0 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM2");
+	x1 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM3");
+	y1 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM4");
+	x2 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM5");
+	y2 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM6");
+	x3 = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM7");
+	y3 = IupGetFloat(param, IUP_VALUE);
+
+  if(image2) imgDestroy(image2);
+  image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3);
+
+	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+  return IUP_DEFAULT;
+}
+
+
 int perspective_cb(void)
 { 
 	int w = imgGetWidth(image1);
 	int h = imgGetHeight(image1);
+  float x0 = 0.0, y0 = 0.0;
+  float x1 = w, y1 = 0.0;
+  float x2 = 3*w/4, y2 = 2*h/3;
+  float x3 = w/4, y3 = 2*h/3;
 
-  double x0 = 0.0, y0 = 0.0;
-  double x1 = w, y1 = 0.0;
-  double x2 = 3*w/4, y2 = 2*h/3;
-  double x3 = w/4, y3 = 2*h/3;
+  int n=sprintf (pbuffer, 
+				     "Bt %%u[, Cancel, Help!]\n"
+	           "x0: %%r[0,%d]\n"
+						 "y0: %%r[0,%d]\n"
+	           "x1: %%r[0,%d]\n"
+						 "y1: %%r[0,%d]\n" 
+	           "x2: %%r[0,%d]\n"
+						 "y2: %%r[0,%d]\n"
+	           "x3: %%r[0,%d]\n"
+						 "y3: %%r[0,%d]\n",
+						 w, h, w, h, w, h, w, h);
 
+  if (imageTmp) imgDestroy(imageTmp);
 
+  imageTmp = imgCopy(image2);
 
-  if (undo) imgDestroy(undo);
-    undo = image2;
+  if (!IupGetParam("Perspective points", perspective_param_cb, 0,
+     pbuffer, 
+     &x0, &y0, &x1, &y1, &x2, &y2, &x3, &y3, 
+     NULL))
+  {
+	    if(image2) imgDestroy(image2);
+		  image2 = imageTmp;
 
-  image2 = imgPerspective(image2, x0, y0, x1, y1, x2, y2, x3, y3);
+  }
+	else 
+	{
+    if (undo) imgDestroy(undo);
+      undo = imageTmp;
+			
+    image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3);
+		imgDestroy(imageTmp);
+  }
   
 	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
-
   return IUP_DEFAULT;
 }
 

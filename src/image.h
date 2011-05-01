@@ -1,5 +1,5 @@
 /**
- *	@file image.c Image: operações imagens. Escreve e le formato TGA e BMP.
+ *	@file image.h Image: operações imagens. Escreve e le formato TGA e BMP.
  *
  *
  *	@author 
