@@ -1,5 +1,5 @@
 EXE=imgfilters
-CSRC=$(wildcard *.c)
+CSRC=$(wildcard src/*.c)
 INCLUDE_DIR=3rd_party/iup/include
 LIB_DIR=3rd_paty/iup
 LIBS=-lm -lGL -lGLU -lXm -L3rd_party/iup -liup -lim \
@@ -18,7 +18,7 @@ $(EXE): $(CSRC:.c=.o)
 	@echo Compilando arquivo objeto: $@
 	@g++ -c $< $(CPPFLAGS) -o $@
 clean:
-	rm *.o imgfilters
+	rm src/*.o imgfilters *.log
 
 check:
 	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LIB_DIR)

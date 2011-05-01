@@ -7,10 +7,11 @@
  *			- Maira Noronha
  *			- Thiago Bastos
  *			- Fabíola Maffra
+ *      - Roberto Azevedo
  *
  *	@date
  *			Criado em:		 1 de Dezembro de 2002
- *			Última Modificação:	24 de Agosto de 2010
+ *			Última Modificação:	01 de Maio de 2011
  *
  *	@version 3.0
  */
@@ -225,8 +226,6 @@ int imgWritePFM(char *filename, Image* image);
 int imgCountColor(Image* image, float);
 
 
-
-
 /*********************************************************/
 /*** FUNCOES QUE DEVEM SER IMPLEMENTADAS NO TRABALHO 1 ***/
 /*********************************************************/
@@ -268,6 +267,9 @@ Image* imgEdges(Image* image);
 Image* imgReduceColors(Image * img, int ncolors);
 
 /************** Transformações Geométricas *************************/
+/*																																 */
+/* Adicionadas por Roberto Azevedo                                 */
+/*******************************************************************/
 /*
  * Interpolação bilinear.
  *

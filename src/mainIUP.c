@@ -3,10 +3,11 @@
  *
  *   @author 
  *         - Marcelo Gattass
+ *         - Roberto Azevedo
  *
  *   @date
  *         Criado em:           12 de Agosto de 2004
- *         Última Modificação:   26 de Agosto de 2010
+ *         Última Modificação:    01 de Maio de 2011
  *
  */
 /*- Bibliotecas padrao usadas: --------------------------------------------*/
@@ -29,7 +30,6 @@
   #include <GL/gl.h>
   #include <GL/glu.h>
 #endif /*WIN32*/
-
 
 #include "image.h"                  /* TAD para imagem */
 
@@ -517,12 +517,9 @@ Ihandle *init_geometric_controls(void)
 
 	frm_geom = IupFrame(
 	  IupHbox(
-//		  IupVbox(
 		    twirl,
 			  sphere,
 				perspective,
-//				NULL),
-//      interpolation,
 			NULL)
   );
 	IupSetAttribute(frm_geom, "TITLE", "Geometric");
@@ -644,7 +641,7 @@ int init(void)
 
   IupShowXY(dialog, IUP_CENTER, IUP_CENTER);
 
-  fpLog = fopen("inf1761T1.txt","at");
+  fpLog = fopen("inf1761T1.log","at");
   fprintf(fpLog,"****************************************************************\n");
   fprintf(fpLog,"%s\n",grupo);
   fprintf(fpLog,"Data: %s\n",ctime(&now));

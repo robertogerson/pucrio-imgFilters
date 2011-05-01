@@ -5,10 +5,11 @@
 *   @author 
 *         - Marcelo Gattass
 *         - Fabíola Maffra
+*         - Roberto Azevedo
 *
 *   @date
 *         Criado em:      1 de Dezembro de 2002
-*         Última Modificação:   1 de maio de 2005
+*         Última Modificação:   01 de maio de 2011
 *
 *   @version 3.0
 */
