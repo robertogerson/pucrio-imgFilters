@@ -5,7 +5,7 @@ LIB_DIR=3rd_paty/iup
 LIBS=-lm -lGL -lGLU -lXm -L3rd_party/iup -liup -lim \
      -liupimglib -liupim -liupgl 
 
-CPPFLAGS=-I$(INCLUDE_DIR)
+CPPFLAGS=-g -I$(INCLUDE_DIR)
 LDFLAGS=-L$(LIB_DIR) $(LIBS)
 
 all: $(EXE)
