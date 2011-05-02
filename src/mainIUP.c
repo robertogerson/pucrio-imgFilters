@@ -788,7 +788,7 @@ int init(void)
   /* create the dialog and set its attributes */
   dialog = IupDialog(box);
   IupSetAttribute(dialog, "CLOSE_CB", "app_exit_cb");
-  IupSetAttribute(dialog, "TITLE", "CG:Trabalho 1");
+  IupSetAttribute(dialog, "TITLE", "FCG:Trabalho Processamento de Imagens");
 
   IupShowXY(dialog, IUP_CENTER, IUP_CENTER);
 
