@@ -1479,7 +1479,7 @@ Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
 	double newx, newy;
   float rgb[3], nw[3], ne[3], sw[3], se[3];
   double dx, dy, d, a;
-	rad = sqrt(((w*w)+(h*h)))/2.0;
+//	rad = sqrt(((w*w)+(h*h)))/2.0;
 
   //Image* img1 = imgCopy(img);
   Image* img1 = imgCreate(w, h, img->dcs);

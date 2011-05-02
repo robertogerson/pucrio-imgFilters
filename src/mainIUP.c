@@ -356,26 +356,89 @@ int gamma_cb(void)
   return IUP_DEFAULT;  
 }
 
+/* Callback used when the user change the twirl parameters */
+int twirl_param_cb(Ihandle* dialog, int n, void* value)
+{
+  float xc, yc, angle, r;
+	Ihandle* param = (Ihandle*)IupGetAttribute(dialog, "PARAM0");
+	xc = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM1");
+	yc = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM2");
+	angle = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM3");
+	r = IupGetFloat(param, IUP_VALUE);
+
+	angle = (2.0*M_PI)*(angle/360.0);
+
+  if(image2) imgDestroy(image2);
+  image2 = imgTwirl(imageTmp, xc, yc, angle, r);
+
+	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+  return IUP_DEFAULT;
+}
 
 int twirl_cb(void)
 {
-//  printf("Twirl transform\n");
-  double xc, yc, angle, rad;
+  int w = imgGetWidth(image2);
+	int h = imgGetHeight(image2);
+  float xc, yc, angle, rad;
 
-  xc = imgGetWidth(image1)/2.0;
-  yc = imgGetHeight(image1)/2.0;
-  angle = 70.0/360.0 * M_PI; //43 graus
-  rad = sqrt((xc*xc)+(yc*yc))/2.0;
+  xc = (double)w/2.0;
+  yc = (double)h/2.0;
+  angle = 70.0; //43 graus
+  rad = sqrt((xc*xc)+(yc*yc));
 
-//  printf("%.2lf %.2lf %.2lf %.2lf\n", xc, yc, angle, rad);
-  /* salva a imagem corrente para acao de undo */
-  if (undo) imgDestroy(undo);
-    undo = image2;
+  int n = sprintf (pbuffer, 
+				     "Bt %%u[, Cancel]\n"
+	           "xc: %%r[0,%d]\n"
+						 "yc: %%r[0,%d]\n"
+	           "angle: %%r[0,%d]\n"
+						 "radius: %%r[0,%.2f]\n",
+						 w, h, 360, sqrt(w*w+h*h) );
 
-// start_time =  clock();
-  image2 = imgTwirl(image2, xc, yc, angle, rad);
-// finish_time = clock();
-// duration = (double)(finish_time - start_time)/CLOCKS_PER_SEC;
+  imageTmp = imgCopy(image2);
+
+  if (!IupGetParam("Twirl parameters", twirl_param_cb, 0,
+     pbuffer, 
+     &xc, &yc, &angle, &rad, 
+     NULL))
+  {
+	    if(image2) imgDestroy(image2);
+
+		  image2 = imageTmp;
+  }
+	else 
+	{
+    if (undo) imgDestroy(undo);
+    
+		undo = imageTmp;
+		
+		if(image2) imgDestroy(image2);
+
+	  angle = (2.0*M_PI)*(angle/360.0); /* convert to radians */
+    image2 = imgTwirl(imageTmp, xc, yc, angle, rad);
+  }
+
+	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
+  return IUP_DEFAULT;
+}
+
+/* Callback used when the user change the sphere parameters */
+int sphere_param_cb(Ihandle* dialog, int n, void* value)
+{
+  float xc, yc, rmax, refr;
+	Ihandle* param = (Ihandle*)IupGetAttribute(dialog, "PARAM0");
+	xc = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM1");
+	yc = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM2");
+	rmax = IupGetFloat(param, IUP_VALUE);
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM3");
+	refr = IupGetFloat(param, IUP_VALUE);
+
+  if(image2) imgDestroy(image2);
+  image2 = imgSphere(imageTmp, xc, yc, rmax, refr);
 
 	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;
@@ -383,23 +446,52 @@ int twirl_cb(void)
 
 int sphere_cb(void)
 {
-  double xc, yc, rmax, refr;
+  int w = imgGetWidth(image1);
+  int h = imgGetHeight(image1);
+  float xc, yc, rmax, refr;
 
-  xc = imgGetWidth(image1)/2.0;
-  yc = imgGetHeight(image1)/2.0;
+  xc = (float)w/2.0;
+  yc = (float)h/2.0;
   rmax = xc/2.0;
   refr = 1.5;
 
-  /* salva a imagem corrente para acao de undo */
-  if (undo) imgDestroy(undo);
-    undo = image2;
-  image2 = imgSphere(image2, xc, yc, rmax, refr);
+  int n = sprintf (pbuffer, 
+				     "Bt %%u[, Cancel]\n"
+	           "xc: %%r[0,%d]\n"
+						 "yc: %%r[0,%d]\n"
+	           "rmax: %%r[0,%d]\n"
+						 "refr: %%r[1.0,%.2f]\n",
+						 w, h, (int)sqrt(w*w+h*h), 3.0);
+
+  imageTmp = imgCopy(image2);
+
+  if (!IupGetParam("Sphere parameters", sphere_param_cb, 0,
+     pbuffer, 
+     &xc, &yc, &rmax, &refr, 
+     NULL))
+  {
+	    if(image2) imgDestroy(image2);
+
+		  image2 = imageTmp;
+  }
+	else 
+	{
+    if (undo) imgDestroy(undo);
+    
+		undo = imageTmp;
+		
+		if(image2) imgDestroy(image2);
+
+    image2 = imgSphere(imageTmp, xc, yc, rmax, refr);
+  }
+
   repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;
 
 }
 
 
+/* Callback used when the user change the perspective parameters */
 int perspective_param_cb(Ihandle* dialog, int n, void* value)
 {
   float x0, y0, x1, y1, x2, y2, x3, y3;
@@ -438,7 +530,7 @@ int perspective_cb(void)
   float x3 = w/4, y3 = 2*h/3;
 
   int n = sprintf (pbuffer, 
-				     "Bt %%u[, Cancel, Help!]\n"
+				     "Bt %%u[, Cancel]\n"
 	           "x0: %%r[0,%d]\n"
 						 "y0: %%r[0,%d]\n"
 	           "x1: %%r[0,%d]\n"
