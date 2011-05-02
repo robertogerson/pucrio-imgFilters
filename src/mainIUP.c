@@ -449,8 +449,6 @@ int perspective_cb(void)
 						 "y3: %%r[0,%d]\n",
 						 w, h, w, h, w, h, w, h);
 
-  if (imageTmp) imgDestroy(imageTmp);
-
   imageTmp = imgCopy(image2);
 
   if (!IupGetParam("Perspective points", perspective_param_cb, 0,
@@ -459,16 +457,18 @@ int perspective_cb(void)
      NULL))
   {
 	    if(image2) imgDestroy(image2);
-		  image2 = imageTmp;
 
+		  image2 = imageTmp;
   }
 	else 
 	{
     if (undo) imgDestroy(undo);
-      undo = imageTmp;
-			
+    
+		undo = imageTmp;
+		
+		if(image2) imgDestroy(image2);
+
     image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3);
-		imgDestroy(imageTmp);
   }
   
 	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
@@ -483,7 +483,8 @@ int save_cb(Ihandle *self)
    imgWriteBMP(filename,image2);
  else 
    imgWritePFM(filename,image2);
- fprintf(fpLog,"SAVE %s\n",filename);
+
+  fprintf(fpLog,"SAVE %s\n",filename);
   return IUP_DEFAULT;
 }
 

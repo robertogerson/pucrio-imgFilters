@@ -236,6 +236,7 @@ void imgDestroy(Image* image)
       if (image->buf) free (image->buf);
       free(image);
    }
+	 image = NULL;
 }
 
 Image* imgCopy(Image* image)

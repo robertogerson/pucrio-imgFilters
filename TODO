@@ -7,14 +7,14 @@ This is the TODO list for imgfilters
 								- ...
 
 * NEW FILTERS
-				- 
-				- 
+				- Perspective
+								- Bilinear filter.
+								- EWA filter.
 
 * NEW INTERPOLATORS
 				- Linear
 				- Trilinear
-				- 
 
 * GUI
-				- Windows to enable users to change parameters of filters.
+				- Enable users to change parameters of filters.
 
