@@ -321,8 +321,23 @@ Image* imgSphere( Image *img, double xc, double yc, double radius,
  *
  * @return Handle para a imagem deformada.
  */
-
 Image *imgPerspective(Image *img,
+				double x0, double y0,
+				double x1, double y1,
+				double x2, double y2,
+			double x3, double y3);
+
+/*
+ * Aplica a transformação perspectiva (ou projetiva) na imagem.
+ * (Implementação anterior)
+ * 
+ * @deprecated
+ * @param img Handle para a image original.
+ * @param x0, y0, x1, y1, x2, y2, x3, y3 pontos de controle de destino.
+ *
+ * @return Handle para a imagem deformada.
+ */
+Image *imgPerspective_Prev(Image *img,
 				double x0, double y0,
 				double x1, double y1,
 				double x2, double y2,

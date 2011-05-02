@@ -23,6 +23,7 @@
 #include <memory.h>
 
 #include "image.h"
+#include "m3.h"
 
 #define ROUND(_) (int)floor( (_) + 0.5 )
 
@@ -1033,6 +1034,7 @@ static pixelvalue opt_med9(pixelvalue * p)
     PIX_SORT(p[0], p[3]) ; PIX_SORT(p[5], p[8]) ; PIX_SORT(p[4], p[7]) ;
     PIX_SORT(p[3], p[6]) ; PIX_SORT(p[1], p[4]) ; PIX_SORT(p[2], p[5]) ;
     PIX_SORT(p[4], p[7]) ; PIX_SORT(p[4], p[2]) ; PIX_SORT(p[6], p[4]) ;
+
     PIX_SORT(p[4], p[2]) ; return(p[4]) ;
 }
 
@@ -1624,11 +1626,6 @@ Image *imgPerspective(Image *img,
 
   Image *img1 = imgCreate(w, h, img->dcs);
   float rgb[3];
-  
-	double dx1, dy1, dx2, dy2, dx3, dy3; /* deltas */
-  double a11, a12, a13; /* coeficientes */
-	double a21, a22, a23; /* coeficientes */
-	double a31, a32;      /* coeficientes */
 
   int x, y; /* cordenadas da imagem de origem */
 	double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
@@ -1636,11 +1633,83 @@ Image *imgPerspective(Image *img,
 
   double A, B, C, D, E, F, G, H, I; /* coeficientes intermediarios */
 
+  double Hom[3*3], HomInv[3*3], p[3], newp[3];
+	double pu[4], pv[4], px[4], py[4];
+
+  pu[0] = 0;   pv[0] = 0;
+  pu[1] = w;   pv[1] = 0;
+  pu[2] = w;   pv[2] = h;
+  pu[3] = 0;   pv[3] = h;
+
+	px[0] = x0;  py[0] = y0;
+	px[1] = x1;  py[1] = y1;
+	px[2] = x2;  py[2] = y2;
+	px[3] = x3;  py[3] = y3;
+
+	/* Create Homography Matrix for projective transform and its inversion
+	   matrix */
+	m3Homography4p (pu, pv, px, py, Hom);
+  m3Inv(Hom, HomInv);
+  
+	for (y=0; y<h; y++){
+      dby = (double) y;
+    for (x=0; x<w; x++){
+      dbx = (double) x;
+			
+			p[0] = x; p[1] = y; p[2] = 1.0;
+			m3MultAb(HomInv, p, newp);
+      
+      /* convert from homogeneous coordinates to euclidian*/
+      newx = newp[0]/newp[2];
+			newy = newp[1]/newp[2];
+			
+      if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
+			{
+        imgGetPixel3fv(img, newx+1, newy+1, rgb);
+			}
+			else
+			{
+			  rgb[0] = rgb[1] = rgb[2] = 0;
+			}
+
+      //TODO: Bilinear Mapping
+			imgSetPixel3fv(img1, x, y, rgb);
+
+		}
+  }
+  
+	return img1;
+}
+
+Image *imgPerspective_Prev(Image *img,
+				double x0, double y0,
+				double x1, double y1,
+				double x2, double y2,
+				double x3, double y3)
+{
+  int w = imgGetWidth(img);
+	int h = imgGetHeight(img);
+
+  Image *img1 = imgCreate(w, h, img->dcs);
+  float rgb[3];
+
+  int x, y; /* cordenadas da imagem de origem */
+	double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
+	double newx, newy; /* coordenadas reais na imagem de destino */
+
+  double A, B, C, D, E, F, G, H, I; /* coeficientes intermediarios */
+
+/* PREVIOUS IMPLEMENTATION */
+	double dx1, dy1, dx2, dy2, dx3, dy3; // deltas
+  double a11, a12, a13; // coeficientes
+	double a21, a22, a23; // coeficientes
+	double a31, a32;      // coeficientes
+
 	dx1 = x1-x2; dy1 = y1-y2;
 	dx2 = x3-x2; dy2 = y3-y2;
 	dx3 = x0-x1+x2-x3; dy3 = y0-y1+y2-y3;
 
-  if ((dx3 == 0.0) && (dy3 == 0.0)) /*eh uma transf. afim? */
+  if ((dx3 == 0.0) && (dy3 == 0.0)) //eh uma transf. afim?
 	{
     a11 = x1-x0;
 		a21 = x2-x1; 
@@ -1667,7 +1736,7 @@ Image *imgPerspective(Image *img,
 		a22 = y3-y0+a23*y3;
 		a32 = y0;
 	}
-
+  
 	A = a22 - a32*a23;
 	B = a31*a23 - a21;
 	C = a21*a32 - a31*a22;
@@ -1676,16 +1745,15 @@ Image *imgPerspective(Image *img,
 	F = a31*a12 - a11*a32;
 	G = a12*a23 - a22*a13;
 	H = a21*a13 - a11*a23;
-  I = a11*a22 - a21*a12;
-
+  I = a11*a22 - a21*a12; 
+	
   for (y=0; y<h; y++){
 	  dby = (double)y/(double)h;
     for (x=0; x<w; x++){
 		  dbx = (double)x/(double)w;
-
 		  newx = (A*x + B*y + C)/(G*x+H*y+I)*w;
 		  newy = (D*x + E*y + F)/(G*x+H*y+I)*h;
-			
+
       if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
 			{
         imgGetPixel3fv(img, newx+1, newy+1, rgb);
@@ -1695,10 +1763,10 @@ Image *imgPerspective(Image *img,
 			  rgb[0] = rgb[1] = rgb[2] = 0;
 			}
 
-      //TODO: Bilinear Mapping
 			imgSetPixel3fv(img1, x, y, rgb);
 
 		}
   }
   return img1;
 }
+

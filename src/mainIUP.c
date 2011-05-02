@@ -404,7 +404,6 @@ int perspective_param_cb(Ihandle* dialog, int n, void* value)
 {
   float x0, y0, x1, y1, x2, y2, x3, y3;
 	Ihandle* param = (Ihandle*)IupGetAttribute(dialog, "PARAM0");
-
 	x0 = IupGetFloat(param, IUP_VALUE);
   param = (Ihandle*)IupGetAttribute(dialog, "PARAM1");
 	y0 = IupGetFloat(param, IUP_VALUE);
@@ -438,7 +437,7 @@ int perspective_cb(void)
   float x2 = 3*w/4, y2 = 2*h/3;
   float x3 = w/4, y3 = 2*h/3;
 
-  int n=sprintf (pbuffer, 
+  int n = sprintf (pbuffer, 
 				     "Bt %%u[, Cancel, Help!]\n"
 	           "x0: %%r[0,%d]\n"
 						 "y0: %%r[0,%d]\n"
