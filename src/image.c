@@ -24,6 +24,7 @@
 
 #include "image.h"
 #include "m3.h"
+#include "ewa.h"
 
 #define ROUND(_) (int)floor( (_) + 0.5 )
 
@@ -1620,7 +1621,8 @@ Image *imgPerspective(Image *img,
 				double x0, double y0,
 				double x1, double y1,
 				double x2, double y2,
-				double x3, double y3)
+				double x3, double y3,
+				Image_Filter filter = IMG_NO_FILTER)
 {
   int w = imgGetWidth(img);
 	int h = imgGetHeight(img);
@@ -1632,9 +1634,12 @@ Image *imgPerspective(Image *img,
 	double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
 	double newx, newy; /* coordenadas reais na imagem de destino */
 
-  double A, B, C, D, E, F, G, H, I; /* coeficientes intermediarios */
+  double A, B, C, D, E, F, G, H, I;  /* coeficientes intermediarios */
 
   double Hom[3*3], HomInv[3*3], p[3], newp[3];
+	double Ux, Uy, Vx, Vy;             /* EWA: Jacobian Matrix Coefficients */
+	double U0, V0;                     /* EWA: Ellipse center */
+	double wtab[EWA_WTAB_SIZE];
 	double pu[4], pv[4], px[4], py[4];
 
   pu[0] = 0;   pv[0] = 0;
@@ -1652,31 +1657,60 @@ Image *imgPerspective(Image *img,
 	m3Homography4p (pu, pv, px, py, Hom);
   m3Inv(Hom, HomInv);
   
-	for (y=0; y<h; y++){
-      dby = (double) y;
-    for (x=0; x<w; x++){
-      dbx = (double) x;
+	switch(filter)
+	{
+	  case IMG_NO_FILTER:
+    {
+      for (y=0; y<h; y++){
+        dby = (double) y;
+        for (x=0; x<w; x++){
+          dbx = (double) x;
 			
-			p[0] = x; p[1] = y; p[2] = 1.0;
-			m3MultAb(HomInv, p, newp);
+			    p[0] = x; p[1] = y; p[2] = 1.0;
+			    m3MultAb(HomInv, p, newp);
       
-      /* convert from homogeneous coordinates to euclidian*/
-      newx = newp[0]/newp[2];
-			newy = newp[1]/newp[2];
+          /* convert from homogeneous coordinates to euclidian*/
+          newx = newp[0]/newp[2];
+			    newy = newp[1]/newp[2];
 			
-      if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
-			{
-        imgGetPixel3fv(img, newx+1, newy+1, rgb);
-			}
-			else
-			{
-			  rgb[0] = rgb[1] = rgb[2] = 0;
-			}
+          if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
+			    {
+            imgGetPixel3fv(img, newx+1, newy+1, rgb);
+			    }
+			    else
+			    {
+			      rgb[0] = rgb[1] = rgb[2] = 0;
+			    }
 
-      //TODO: Bilinear Mapping
-			imgSetPixel3fv(img1, x, y, rgb);
+          //TODO: Bilinear Mapping
+			    imgSetPixel3fv(img1, x, y, rgb);
+		    }
+      }
+    }
+		break;
 
+		case IMG_EWA_FILTER:
+		{
+			ewaWeigths(wtab, EWA_WTAB_SIZE, EWA_ALPHA);
+			for(y=0; y<h; y++)
+			{
+			  for(x=0; x<w; x++)
+				{
+				  ewaJacobianCoefficients(x, y, HomInv, &Ux, &Uy, &Vx, &Vy);
+          ewaEllipseCoefficients(Ux, Uy, Vx, Vy, &A, &B, &C, &F);
+					ewaEllipseCenter(x, y, HomInv, &U0, &V0);
+
+					if(U0 < 0 || U0 > w || V0 < 0 || V0 > h){
+				    rgb[0] = rgb[1] = rgb[2] = 0.0;
+					}
+          else 
+					  ewaFilter(img, U0, V0, wtab, A, B, C, F, rgb);
+
+					imgSetPixel3fv(img1, x, y, rgb);
+				}
+			}
 		}
+		break;
   }
   
 	return img1;
@@ -1750,6 +1784,7 @@ Image *imgPerspective_Prev(Image *img,
 	
   for (y=0; y<h; y++){
 	  dby = (double)y/(double)h;
+
     for (x=0; x<w; x++){
 		  dbx = (double)x/(double)w;
 		  newx = (A*x + B*y + C)/(G*x+H*y+I)*w;

@@ -19,6 +19,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#define ROUND(_) (int)floor( (_) + 0.5 )
 
 /************************************************************************/
 /* Tipos Exportados                                                     */
@@ -29,6 +30,13 @@
 
 typedef struct Image_imp Image;
 
+
+typedef enum {
+  IMG_NO_FILTER=0,
+	IMG_BILLINEAR_FILTER,
+	IMG_EWA_FILTER
+
+} Image_Filter;
 
 /************************************************************************/
 /* Funcoes Exportadas                                                   */
@@ -325,7 +333,8 @@ Image *imgPerspective(Image *img,
 				double x0, double y0,
 				double x1, double y1,
 				double x2, double y2,
-			double x3, double y3);
+			  double x3, double y3,
+				Image_Filter filter);
 
 /*
  * Aplica a transformação perspectiva (ou projetiva) na imagem.

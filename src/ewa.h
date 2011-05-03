@@ -16,9 +16,24 @@
 #ifndef EWA_H
 #define EWA_H
 
+
+#define EWA_WTAB_SIZE 1024
+#define EWA_ALPHA 2.7
+
 #include <math.h>
 
+#include "m3.h"
 #include "image.h"
+
+/**
+ * Precomputes the weigths used by ewa filter.
+ * WTAB from
+ * 
+ * @param weigths
+ * @param length The size of the table.
+ * @param alpha
+ */
+void ewaWeigths(double *weigths, int length, double alpha);
 
 /**
  * Computes Jacobian Matrix from M.
@@ -61,16 +76,16 @@
  * @param Vx returns the dV/dx value.
  * @param Vy returns the dV/dy value.
  */
-void ewaJacobianCoeficients( double x, double y, double *H, 
-                             double *Ux, double *Uy, double *Vx, double *Vy);
+void ewaJacobianCoefficients( double x, double y, double *H, 
+                              double *Ux, double *Uy, double *Vx, double *Vy);
 
 /**
- * Computes the Ellipse Coeficients
+ * Computes the Ellipse Coefficients
  *
  * TODO: High quality EWA.
  */
-void ewaEllipseCoeficients(double Ux, double Uy, double Vx, double Vy,
-												  double *A, double *B, double *C, double *F);
+void ewaEllipseCoefficients( double Ux, double Uy, double Vx, double Vy,
+                             double *A, double *B, double *C, double *F);
 
 /**
  * Computes the texture space ellipse center u0 v0, from screen 
@@ -78,25 +93,23 @@ void ewaEllipseCoeficients(double Ux, double Uy, double Vx, double Vy,
  *
  * TODO: params.
  */
-void ewaGetEllipseCenter(Image *img, double *u0, double *v0);
+void ewaEllipseCenter( double x, double y, double *H, 
+                       double *U0, double *V0);
 
 /**
  * TODO: Description.
  */
-void ewaEllipseBoundingBox();
+void ewaEllipseBoundingBox( double U0, double V0,
+                            double w, double h,
+                            double A, double B, double C, double F,
+                            int *u1, int *u2, int *v1, int *v2);
 
 /**
  * TODO: Description.
  */
-void ewaCalcColor();
-
-/**
- * Apply the EWA Filter to an image.
- *
- * @param img the original image.
- *
- * @return the 
- */
-Image* ewaApplyFilter(Image *img);
+void ewaFilter ( Image *img, double U0, double V0,
+                 double *wtab,
+                 double A, double B, double C, double F,
+                 float *rgb);
 
 #endif /*EWA_H*/

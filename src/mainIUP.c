@@ -495,6 +495,7 @@ int sphere_cb(void)
 int perspective_param_cb(Ihandle* dialog, int n, void* value)
 {
   float x0, y0, x1, y1, x2, y2, x3, y3;
+	int ewa_filter = 0;
 	Ihandle* param = (Ihandle*)IupGetAttribute(dialog, "PARAM0");
 	x0 = IupGetFloat(param, IUP_VALUE);
   param = (Ihandle*)IupGetAttribute(dialog, "PARAM1");
@@ -512,8 +513,20 @@ int perspective_param_cb(Ihandle* dialog, int n, void* value)
   param = (Ihandle*)IupGetAttribute(dialog, "PARAM7");
 	y3 = IupGetFloat(param, IUP_VALUE);
 
+  param = (Ihandle*)IupGetAttribute(dialog, "PARAM8");
+  ewa_filter = IupGetFloat(param, IUP_VALUE);
+
   if(image2) imgDestroy(image2);
-  image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3);
+
+	if(ewa_filter){
+    image2 = imgPerspective( imageTmp, x0, y0, x1, y1, x2, y2, x3, y3, 
+	                           IMG_EWA_FILTER);
+  }
+	else
+	{
+    image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3, 
+	                        IMG_NO_FILTER);
+	}
 
 	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
   return IUP_DEFAULT;
@@ -528,6 +541,7 @@ int perspective_cb(void)
   float x1 = w, y1 = 0.0;
   float x2 = 3*w/4, y2 = 2*h/3;
   float x3 = w/4, y3 = 2*h/3;
+	int use_ewa = 0;
 
   int n = sprintf (pbuffer, 
 				     "Bt %%u[, Cancel]\n"
@@ -538,14 +552,15 @@ int perspective_cb(void)
 	           "x2: %%r[0,%d]\n"
 						 "y2: %%r[0,%d]\n"
 	           "x3: %%r[0,%d]\n"
-						 "y3: %%r[0,%d]\n",
+						 "y3: %%r[0,%d]\n"
+						 "Use EWA: %%b[No,Yes]\n",
 						 w, h, w, h, w, h, w, h);
 
   imageTmp = imgCopy(image2);
 
   if (!IupGetParam("Perspective points", perspective_param_cb, 0,
      pbuffer, 
-     &x0, &y0, &x1, &y1, &x2, &y2, &x3, &y3, 
+     &x0, &y0, &x1, &y1, &x2, &y2, &x3, &y3, &use_ewa,
      NULL))
   {
 	    if(image2) imgDestroy(image2);
@@ -559,8 +574,16 @@ int perspective_cb(void)
 		undo = imageTmp;
 		
 		if(image2) imgDestroy(image2);
-
-    image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3);
+    if (use_ewa)
+		{
+      image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3,
+		                        IMG_EWA_FILTER);
+		}
+		else
+		{
+      image2 = imgPerspective(imageTmp, x0, y0, x1, y1, x2, y2, x3, y3,
+		                        IMG_NO_FILTER);
+    }
   }
   
 	repaint_cb2(right_canvas);  /* redesenha o canvas 2 */
