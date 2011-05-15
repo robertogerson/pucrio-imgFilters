@@ -75,22 +75,23 @@ void bilinear_filter(Image *image, double u0, double v0, float *rgb)
 }
 
 void ewaEllipseCoefficients( double Ux, double Uy, double Vx, double Vy,
-                             double *A, double *B, double *C, double *F)
+                             double *A, double *B, double *C, double *F,
+														 double quality)
 {
    double alpha;
 
-  //NORMA EWA
-//  *A = Vx*Vx + Vy*Vy;
-//  *B = (-2)*(Ux*Vx + Uy*Vy);
-//  *C = Ux*Ux + Uy*Uy;
-//  *F = pow((Ux*Vy - Uy*Vx), 2);
-
-	// High Quality EWA.
-  *A = Vx * Vx + Vy * Vy + 1;
-	*B = -2 * (Ux * Vx + Uy * Vy);
-  *C = Ux * Ux + Uy * Uy + 1;
-  *F = (*A) * (*C) - (*B) * (*B) / 4;
-
+	if(quality == EWA_NORMAL) { /*NORMAL EWA*/
+    *A = Vx*Vx + Vy*Vy;
+    *B = (-2)*(Ux*Vx + Uy*Vy);
+    *C = Ux*Ux + Uy*Uy;
+    *F = pow((Ux*Vy - Uy*Vx), 2);
+  }
+  else { /* High Quality EWA. */
+    *A = Vx * Vx + Vy * Vy + 1;
+	  *B = -2 * (Ux * Vx + Uy * Vy);
+    *C = Ux * Ux + Uy * Uy + 1;
+    *F = (*A) * (*C) - (*B) * (*B) / 4;
+  }
 
   // Ellipse is AU^2 + BUV + CV^2 = F, where U = u - U0, V = v - V0.
   // Scale A, B, C and F equally so that F = WTAB length.

@@ -86,13 +86,13 @@ int m3Homography4p( double *u, double *v, double *x, double *y,
                       square */
     double Linv[3*3]; 
     double L[3*3] = { u[1]-u[0], u[3]-u[0],     0 /*u[0]*/,  
-                         v[1]-v[0], v[3]-v[0],     0 /*v[0]*/,   
-                                 0,         0,      1};
+                      v[1]-v[0], v[3]-v[0],     0 /*v[0]*/,   
+                              0,         0,     1};
 
     /* [A] transforms the deformed unit square into the {u,v) */
     double A[3*3] = { x[1]-x[0], x[3]-x[0],     x[0],  
                       y[1]-y[0], y[3]-y[0],     y[0],   
-                               0,         0,      1};
+                              0,         0,        1};
     double P[3*3] = { 0,0,0,  0,0,0,  0,0,0}; /* initialize with zeros */
     double b[3]   = {x[2],y[2],1.};
     double xx[3];
@@ -102,20 +102,18 @@ int m3Homography4p( double *u, double *v, double *x, double *y,
     double Ainv[3*3];
     m3Inv(A,Ainv);
     m3Inv(L,Linv);
-        
 
     m3MultAb(Ainv,b,xx);
     alpha=xx[0];
     betha=xx[1];
 
-
     P[0]=alpha; P[4]=betha; P[6]=1-betha; P[7]=1-alpha; P[8]=alpha+betha-1;
     T[0] = 1; T[4] = 1; T[8] = 1; T[2] = -u[0]; T[5] = -v[0];
     
-    m3MultAB(Linv,T,N);
+    m3MultAB(Linv, T, N);
     
-    m3MultAB(A,P,Temp);
-    m3MultAB(Temp,N,H4p);
+    m3MultAB(A, P, Temp);
+    m3MultAB(Temp, N, H4p);
     return 0;
 }
 

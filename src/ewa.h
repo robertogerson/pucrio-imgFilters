@@ -25,6 +25,11 @@
 #include "m3.h"
 #include "image.h"
 
+typedef enum {
+  EWA_NORMAL = 0,
+	EWA_ENHANCED
+}EWA_TYPE;
+
 /**
  * Precomputes the weigths used by ewa filter.
  * WTAB from
@@ -85,7 +90,8 @@ void ewaJacobianCoefficients( double x, double y, double *H,
  * TODO: High quality EWA.
  */
 void ewaEllipseCoefficients( double Ux, double Uy, double Vx, double Vy,
-                             double *A, double *B, double *C, double *F);
+                             double *A, double *B, double *C, double *F,
+														 double quality);
 
 /**
  * Computes the texture space ellipse center u0 v0, from screen 

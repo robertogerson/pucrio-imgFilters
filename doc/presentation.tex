@@ -3,8 +3,10 @@
 \usepackage[utf8x]{inputenc}
 \usepackage{graphicx}
 \usepackage{tabularx}
+\usepackage{listings}
 \usepackage[brazil]{babel}
-\usetheme{PaloAlto}
+\usetheme{Luebeck}
+%\usetheme{Singapore}
 \usecolortheme{rose}
 
 \title[Operações Geométricas (Warping) em Imagens]{Operações Geométricas
@@ -14,6 +16,8 @@
 \date{\today}
 \subject{alguma coisa}
 %\logo{\includegraphics[scale=1.0]{sua_figura.png}}
+
+\lstset{language=C}
 
 \begin{document}
 %para criar a página de rosto
@@ -51,10 +55,90 @@ para uma nova imagem $I'$ modificando as coordenadas dos pixels da imagem:
  \frametitle{Transformações Geométricas - Exemplos}
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.75\textwidth]{img/typical-geometric-transform.png}
+  \includegraphics[width=0.70\textwidth]{img/typical-geometric-transform.png}
 \end{figure}
 Exemplos de transformações geométricas em imagens: (a) escala; (b) rotação; (c)
 cisalhamento; (d) perpectiva; e (e) twirl.
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\subsection{Reamostragem e Interpolação}
+\begin{frame}
+\frametitle{Transformações Geométricas - Problemas}
+\begin{itemize}
+ \item Operações geométricas não são simples, porque envolvem reamostrar os
+pixels que inicialmente são discretos em um domínio de reais.
+ \item Problemas:
+ \begin{itemize}
+  \item Magnificação - duplica informação (serrilhado)
+  \item Minimificação - perde informação (\textit{aliasing})
+ \end{itemize}
+\end{itemize}
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/resize.png}
+\end{figure}
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}
+  \frametitle{Reamostragem: Interpolação}
+\begin{itemize}
+ \item A função de mapeamento comumente é uma função $R^2 \rightarrow R^2$.
+ \item Como tanto a imagem original como a imagem final são discretas, quase
+sempre temos um problema de reamostragem depois de aplicar a função de
+mapeamento.
+\end{itemize}
+\pause
+\begin{center}
+ \framebox{\includegraphics[width=1.2in]{img/pixels-in-resulting-image.png}}
+\end{center}
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}
+  \frametitle{Reamostragem: "Interpolação" (Nearest Neighbor)}
+\begin{itemize}
+ \item Escolhe o pixel mais próximo do qual ele deveria ser mapeado.
+\end{itemize}
+\begin{center}
+ \framebox{\includegraphics[width=2.5in]{img/nearest-neighbor.png}}
+\end{center}
+\pause
+  $x = (int) floatx + 0.5;$ \\
+  $y = (int) floatx + 0.5;$
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}[fragile]
+  \frametitle{Reamostragem: Interpolação Bilinear}
+\begin{itemize}
+ \item Escolhe a cor a partir da composição de 3 interpolações.\\
+\end{itemize}
+\begin{center}
+ \framebox{\includegraphics[width=2.5in]{img/bilinear-interpolation.png}}
+\end{center}
+\pause
+\tiny
+\begin{lstlisting}
+void imgBillinearInterpolate(float xW, float yW, float* nw,
+        float *ne, float *sw, float *se, float *result)
+{
+  float cx = 1.0f - xW;
+  float cy = 1.0f - yW;
+
+  float m0, m1;
+  /* red */
+  m0 = cx*nw[0] + xW*ne[0];
+  m1 = cx*sw[0] + xW*se[0];
+  result[0] = (cy*m0 + yW*m1);
+  ...
+}
+\end{lstlisting}
 \end{frame}
 
 %-------------------------------------------------------
@@ -70,7 +154,7 @@ cisalhamento; (d) perpectiva; e (e) twirl.
 
 %-------------------------------------------------------
 %==================================================slide
-\section{Função de Mapeamento}
+\section{Funções de Mapeamento}
 \begin{frame}
 \frametitle{Reamostragem: Source-to-target X Target-to-source}
 \begin{tabular*}{0.75\textwidth}{ p{4cm} p{.6cm} p{4cm}}
@@ -89,53 +173,6 @@ $I'$, é computado o ponto correspondente (contínuo) da imagem original:
  (x, y)=T^{-1}(u',v')
 \end{equation*} \\
 \end{tabular*}
-\end{frame}
-
-%-------------------------------------------------------
-%==================================================slide
-\subsection{Problemas na Reamostragem}
-\begin{frame}
-\frametitle{Transformações Geométricas - Problemas}
-\begin{itemize}
- \item Operações geométricas não são simples, porque envolvem reamostrar os
-pixels que inicialmente são discretos em um domínio de reais.
- \item Problemas:
- \begin{itemize}
-  \item Magnificação - duplica informação (serrilhado)
-  \item Minimificação - perde informação (\textit{aliasing})
- \end{itemize}
-\end{itemize}
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.8\textwidth]{img/resize.png}
-\end{figure}
-\end{frame}
-%-------------------------------------------------------
-%==================================================slide
-\begin{frame}
-  \frametitle{Reamostragem: Interpolação}
-\begin{itemize}
- \item A função de mapeamento comumente é uma função $R^2 \rightarrow R^2$.
- \item Como tanto a imagem original como a imagem final são discretas, quase
-sempre temos um problema de reamostragem depois de aplicar a função de
-mapeamento.
-\end{itemize}
-\begin{center}
- \framebox{\includegraphics[width=1.2in]{img/pixels-in-resulting-image.png}}
-\end{center}
-\end{frame}
-
-\begin{frame}
-  \frametitle{Reamostragem: "Interpolação" (Nearest Neighbor)}
-\begin{itemize}
- \item A função de mapeamento comumente é uma função $R^2 \rightarrow R^2$.
- \item Como tanto a imagem original como a imagem final são discretas, quase
-sempre temos um problema de reamostragem depois de aplicar a função de
-mapeamento.
-\end{itemize}
-\begin{center}
- \framebox{\includegraphics[width=2.5in]{img/nearest-neighbor.png}}
-\end{center}
 \end{frame}
 
 %-------------------------------------------------------
@@ -167,7 +204,6 @@ Raio Máximo: $r_{max}$
 \frametitle{Twirl: Função de Mapeamento Inverso}
 A Função de Mapeamento inverso da transformação \textit{twirl} (dado um ponto da
 textura $(u,v)$, determina o ponto correspondente na image) é dada por:
-
    \begin{equation}
     T_x^{-1}: x = 
 \begin{cases}
@@ -184,6 +220,7 @@ textura $(u,v)$, determina o ponto correspondente na image) é dada por:
 \end{cases}
 \end{equation}
 
+\pause
 Onde,
 \begin{equation}
 \begin{array}{c|c}
@@ -246,64 +283,212 @@ d_y =  y'- y_c & z = \sqrt[2]{r_max^2 - r^2} & \beta_y =
 
 %-------------------------------------------------------
 %==================================================slide
-\subsection{Perspective}
+\subsection{Projeção perspectiva}
 \begin{frame}
- \frametitle{Perspective}
+ \frametitle{Projeção Perspectiva}
  \begin{itemize}
   \item A projeção perspectiva é uma transformação linear entre quadriláteros
 arbitrários.
-  \item A projeção perspectiva pode ser escrita como um mapeamento linear em
-coordenadas homogêneas:
+  \item Uma projeção perspectiva é uma (caso especial de) Homografia!
+  \item Algumas propriedades:
+  \begin{itemize}
+   \item Todas as linhas continuam sendo linhas.
+   \item Uma composição de duas perspectivas não é uma perspectiva.
+  \end{itemize}
  \end{itemize}
-
-\begin{columns}[c]
-\column{1.5in}
-%\[
-% \begin{bmatrix}
-%      x' & y' & h'
-%  \end{bmatrix} 
-%  = 
-%  \begin{bmatrix} x & y & 1 \end{bmatrix} . 
-%\begin{bmatrix} 
-%  a_{11}
-%\end{bmatrix}
-%\]
-\column{1.5in}
+\begin{center}
 \framebox{\includegraphics[width=1.5in]{img/perspective.png}}
-\end{columns}
-
+\end{center}
 \end{frame}
 
 %-------------------------------------------------------
 %==================================================slide
 \begin{frame}
+\frametitle{Projeções perspectivas}
+
+\[
+ \begin{bmatrix}
+      uq & vq & q
+  \end{bmatrix} 
+  = 
+  \begin{bmatrix} x & y & 1 \end{bmatrix} . 
+\begin{bmatrix} 
+a & d & g \\
+b & e & h \\
+c & f & i \\  
+\end{bmatrix}
+\]
+
+Onde pode-se tirar que: \\
+\begin{columns}[c]
+\column{2.0in}
+$u = \frac{ax + by + c}{gx + hy + i}$
+\column{2.0in}
+$v = \frac{dx + ey + f}{gx + hy + i}$
+\end{columns}
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}
+\frametitle{Composição de Projeção perspectiva}
+\begin{center}
+\framebox{\includegraphics[width=3.0in]{img/two-step-projective-transform.png}}
+\end{center}
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\section{EWA - Elliptical Weighted Average Filter}
+\begin{frame}
+\frametitle{Filtro EWA}
  \begin{itemize}
-  \item TODO: EWA.
-  \item TODO: Enhanced EWA.
+  \item EWA: Elliptical Weighted Average Filter.
+  \item Compensa artefatos de \textit{aliasing} causados pela projeção
+perspectiva.
  \end{itemize}
 \end{frame}
 
-%\section{Filtros}
-%\subsection{Linear}
-%\subsection{Billinear}
+\begin{frame}[fragile]
+\frametitle{EWA - Algoritmo}
+O Algoritmo é dado pelos passos a seguir:
+\begin{itemize}
+ \item Cálculo da Homografia.
+ \item Cálculo dos pesos.
+ \item Para cada pixel da imagem resultante:
+ \begin{itemize}
+  \item Cálculo da Matriz Jacobiana (Aproximação de uma transformação afim
+naquele ponto)
+  \item Cálculo dos Coeficientes da Elipse.
+  \item Cálculo do centro da Elipse.
+  \item Aplica o filtro EWA naquele pixel.
+ \end{itemize}
+\end{itemize}
+\end{frame}
 
-%\subsection{EWA - Elliptical Weighted Average Filter}
-%\begin{frame}
-%\frametitle{Ellipitcal Weighted Average Filter}
-%\begin{itemize}
-% \item 
-%\end{itemize}
-%\end{frame}
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}[fragile]
+ \frametitle{EWA - Código}
+\tiny
+\begin{lstlisting}
+m3Homography4p (pu, pv, px, py, Hom);
+m3Inv(Hom, HomInv);
+ewaWeigths(wtab, EWA_WTAB_SIZE, EWA_ALPHA);
+
+for(y=0; y<h; y++)
+{
+  for(x=0; x<w; x++)
+  {
+    ewaJacobianCoefficients(x, y, HomInv, &Ux, &Uy, &Vx, &Vy);
+    ewaEllipseCoefficients(Ux, Uy, Vx, Vy, &A, &B, &C, &F, EWA_ENHANCED);
+    ewaEllipseCenter(x, y, HomInv, &U0, &V0);
+
+    ewaFilter(img, U0, V0, wtab, A, B, C, F, rgb);
+    imgSetPixel3fv(img1, x, y, rgb);
+  }
+}
+\end{lstlisting}
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{frame}[fragile]
+ \frametitle{EWA - Passos}
+1. Cálculo dos Pesos:
+\tiny
+\begin{lstlisting}
+void ewaWeigths(double *weigths, int length, double alpha)
+{
+  double r;
+  int i;
+  for(int i = 0; i < length; i++)
+  {
+    r = i/(double) (length - 1);
+    weigths[ i ] = exp( - alpha * r);
+  }
+}
+\end{lstlisting}
+
+\pause
+\small
+2. Cálculo da Jacobiana:
+\[
+J=\left[ \begin{array}{cc}
+\frac{\partial u}{\partial x} & \frac{\partial u}{\partial y} \\
+\frac{\partial v}{\partial x} & \frac{\partial v}{\partial y} 
+\end{array}
+\right]
+= 
+\left[ \begin{array}{cc}
+U_x & U_y \\
+V_x & V_y 
+\end{array}
+\right]
+\]
+\end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+
+\begin{frame}[fragile]
+\frametitle{EWA - Passos}
+3. Coeficientes da Elipse: \\
+\begin{columns}[c]
+\column{2.0in}
+\textit{EWA Normal}:
+$A = Vx.Vx + Vy.Vy$ \\
+$B = (-2).(Ux.Vx + Uy.Vy)$ \\
+$C = Ux.Ux + Uy.Uy$
+$F = (Ux.Vy - Uy.Vx)^2$
+\column{2.0in}
+\textit{Enhanced EWA}
+$A = Vx.Vx + Vy.Vy + 1$
+$B = -2.(Ux.Vx + Uy.Vy)$
+$C = Ux.Ux + Uy.Uy + 1$
+$F = A.C - \frac{(B.B)^2}{4}$
+\end{columns}
+\end{frame}
 
 %-------------------------------------------------------
 %==================================================slide
 \begin{frame}
 \frametitle{Conclusões}
 \begin{itemize}
- \item Transformações geométricas não são simples.
- \item Filtros são necessários.
- \item Filtros isotrópicos / anisotrópicos.
+ \item Transformações geométricas não são trivias, principalmente porque
+envolve reamostragem dos pixels em um domínio contínuo.
+ \item Reamostragem possivelmente causa problemas de \textit{aliasing}.
+ \item O filtro EWA é uma solução que busca diminuir esse problema.
+ \item Possíveis Trabalhos Futuros
+ \begin{itemize}
+  \item Outras transformações geométricas.
+  \item Outras interpolações (Trilinear, B-spline etc.)
+  \item Morphing.
+  \item Testar outros pré-filtros que não o gaussiano para o EWA.
+ \end{itemize}
 \end{itemize}
 \end{frame}
+
+%-------------------------------------------------------
+%==================================================slide
+\begin{thebibliography}{10}
+\bibitem{Crane1997}[Crane, 1997]
+Randy Crane.
+\newblock A simplified Approach to Image Processing: Classical and Modern
+Techniques in C.
+
+\bibitem{Burger1997}[Burger and Burge, 2008]
+Wilhelm Burger and Mark J. Burge
+\newblock Digital Imaging Processing: An algorithm introduction using Java.
+
+\bibitem{Herckbert1989}[Herckbert, 1989]
+Paul S. Heckbert
+\newblock Fundamentals of Texture Mapping and Image Warping.
+
+\bibitem{Slusallek}[Slusallek, ????]
+Philipp Slusallek
+\newblock Computer Graphics: Texture Filtering and Spectral Analysis
+(Presentation).
+\end{thebibliography}
 
 \end{document}

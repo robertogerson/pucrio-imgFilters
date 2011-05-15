@@ -259,8 +259,6 @@ Image* imgCopy(Image* image)
    return img1;
 }
 
-
-
 Image* imgGrey(Image* image)
 {
    int w = imgGetWidth(image);
@@ -551,6 +549,8 @@ int imgWriteTGA(char *filename, Image* image)
 
    FILE          *filePtr;        /* ponteiro do arquivo    */
    unsigned char * buffer;        /* buffer de bytes        */
+
+
    int  x,y;   
 
    unsigned char byteZero=0;      /* usado para escrever um byte zero no arquivo      */
@@ -1453,23 +1453,24 @@ void imgBillinearInterpolate(float xW, float yW, float* nw,
                              float *ne, float *sw, float *se, float *result)
 {
   float cx = 1.0f - xW;
-	float cy = 1.0f - yW;
+  float cy = 1.0f - yW;
 
-	float m0, m1;
-	/* red */
+  float m0, m1;
+  /* red */
   m0 = cx*nw[0] + xW*ne[0];
-	m1 = cx*sw[0] + xW*se[0];
-	result[0] = (cy*m0 + yW*m1);
+  m1 = cx*sw[0] + xW*se[0];
+  result[0] = (cy*m0 + yW*m1);
 
   /* green */
   m0 = cx*nw[1] + xW*ne[1];
-	m1 = cx*sw[1] + xW*se[1];
-	result[1] = (cy*m0 + yW*m1);
+  m1 = cx*sw[1] + xW*se[1];
+  result[1] = (cy*m0 + yW*m1);
 
   /* blue */
-	m0 = cx*nw[2] + xW*ne[2];
-	m1 = cx*sw[2] + xW*sw[1];
-	result[2] = (cy*m0 + yW*m1);
+  m0 = cx*nw[2] + xW*ne[2];
+  m1 = cx*sw[2] + xW*sw[1];
+  result[2] = (cy*m0 + yW*m1);
+
 }
 
 Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
@@ -1477,7 +1478,7 @@ Image* imgTwirl(Image *img, double xc, double yc, double angle, double rad)
   int w = imgGetWidth(img);
   int h = imgGetHeight(img);
   int x, y;
-	double newx, newy;
+  double newx, newy;
   float rgb[3], nw[3], ne[3], sw[3], se[3];
   double dx, dy, d, a;
 //	rad = sqrt(((w*w)+(h*h)))/2.0;
@@ -1631,60 +1632,60 @@ Image *imgPerspective(Image *img,
   float rgb[3];
 
   int x, y; /* cordenadas da imagem de origem */
-	double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
-	double newx, newy; /* coordenadas reais na imagem de destino */
+  double dbx, dby; /*coordenadas reais (entre 0 e 1) da img de origem */
+  double newx, newy; /* coordenadas reais na imagem de destino */
 
   double A, B, C, D, E, F, G, H, I;  /* coeficientes intermediarios */
 
   double Hom[3*3], HomInv[3*3], p[3], newp[3];
-	double Ux, Uy, Vx, Vy;             /* EWA: Jacobian Matrix Coefficients */
-	double U0, V0;                     /* EWA: Ellipse center */
-	double wtab[EWA_WTAB_SIZE];
-	double pu[4], pv[4], px[4], py[4];
+  double Ux, Uy, Vx, Vy;             /* EWA: Jacobian Matrix Coefficients */
+  double U0, V0;                     /* EWA: Ellipse center */
+  double wtab[EWA_WTAB_SIZE];
+  double pu[4], pv[4], px[4], py[4];
 
   pu[0] = 0;   pv[0] = 0;
   pu[1] = w;   pv[1] = 0;
   pu[2] = w;   pv[2] = h;
   pu[3] = 0;   pv[3] = h;
 
-	px[0] = x0;  py[0] = y0;
-	px[1] = x1;  py[1] = y1;
-	px[2] = x2;  py[2] = y2;
-	px[3] = x3;  py[3] = y3;
+  px[0] = x0;  py[0] = y0;
+  px[1] = x1;  py[1] = y1;
+  px[2] = x2;  py[2] = y2;
+  px[3] = x3;  py[3] = y3;
 
-	/* Create Homography Matrix for projective transform and its inversion
-	   matrix */
-	m3Homography4p (pu, pv, px, py, Hom);
+  /* Create Homography Matrix for projective transform and its inversion
+     matrix */
+  m3Homography4p (pu, pv, px, py, Hom);
   m3Inv(Hom, HomInv);
   
-	switch(filter)
-	{
-	  case IMG_NO_FILTER:
+  switch(filter)
+  {
+    case IMG_NO_FILTER:
     {
       for (y=0; y<h; y++){
         dby = (double) y;
         for (x=0; x<w; x++){
           dbx = (double) x;
-			
-			    p[0] = x; p[1] = y; p[2] = 1.0;
-			    m3MultAb(HomInv, p, newp);
+
+          p[0] = x; p[1] = y; p[2] = 1.0;
+          m3MultAb(HomInv, p, newp);
       
           /* convert from homogeneous coordinates to euclidian*/
           newx = newp[0]/newp[2];
-			    newy = newp[1]/newp[2];
+          newy = newp[1]/newp[2];
 			
           if ( newx >= 0 && newx < (w-1) && newy >= 0 && newy < (h-1))
-			    {
+          {
             imgGetPixel3fv(img, newx+1, newy+1, rgb);
-			    }
-			    else
-			    {
-			      rgb[0] = rgb[1] = rgb[2] = 0;
-			    }
+          }
+          else
+          {
+            rgb[0] = rgb[1] = rgb[2] = 0;
+          }
 
           //TODO: Bilinear Mapping
-			    imgSetPixel3fv(img1, x, y, rgb);
-		    }
+          imgSetPixel3fv(img1, x, y, rgb);
+        }
       }
     }
 		break;
@@ -1697,7 +1698,7 @@ Image *imgPerspective(Image *img,
 			  for(x=0; x<w; x++)
 				{
 				  ewaJacobianCoefficients(x, y, HomInv, &Ux, &Uy, &Vx, &Vy);
-          ewaEllipseCoefficients(Ux, Uy, Vx, Vy, &A, &B, &C, &F);
+          ewaEllipseCoefficients(Ux, Uy, Vx, Vy, &A, &B, &C, &F, EWA_ENHANCED);
 					ewaEllipseCenter(x, y, HomInv, &U0, &V0);
 
 					if(U0 < 0 || U0 > w || V0 < 0 || V0 > h){

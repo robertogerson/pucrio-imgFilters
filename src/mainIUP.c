@@ -43,7 +43,7 @@ Ihandle *dialog;                          /* handle para o dialogo principal */
 
 FILE *fpLog;            /* arquivo de log que registra as acoes do usuario */
 extern char grupo[]; 
-char pbuffer[200];
+char pbuffer[300];
 
 /*- Funcoes auxiliares ------------*/
 
@@ -545,16 +545,23 @@ int perspective_cb(void)
 
   int n = sprintf (pbuffer, 
 				     "Bt %%u[, Cancel]\n"
-	           "x0: %%r[0,%d]\n"
-						 "y0: %%r[0,%d]\n"
-	           "x1: %%r[0,%d]\n"
-						 "y1: %%r[0,%d]\n" 
-	           "x2: %%r[0,%d]\n"
-						 "y2: %%r[0,%d]\n"
-	           "x3: %%r[0,%d]\n"
-						 "y3: %%r[0,%d]\n"
+	           "x0: %%r[%d,%d]\n"
+						 "y0: %%r[%d,%d]\n"
+	           "x1: %%r[%d,%d]\n"
+						 "y1: %%r[%d,%d]\n" 
+	           "x2: %%r[%d,%d]\n"
+						 "y2: %%r[%d,%d]\n"
+	           "x3: %%r[%d,%d]\n"
+						 "y3: %%r[%d,%d]\n"
 						 "Use EWA: %%b[No,Yes]\n",
-						 w, h, w, h, w, h, w, h);
+						 -2*w, 2*w,
+						 -2*h, 2*h,
+						 -2*w, 2*w,
+						 -2*h, 2*h,
+						 -2*w, 2*w,
+						 -2*h, 2*h,
+						 -2*w, 2*w,
+						 -2*h, 2*h);
 
   imageTmp = imgCopy(image2);
 
