@@ -1,20 +1,17 @@
-This is the TODO list for imgfilters
+This is the TODO list for imgfilters.
 
 * IMAGE
-				- Load other image types:
-								- PNG
-								- JPEG
-								- ...
+	- Load other image types:
+		- PNG
+		- JPEG
+		- ...
 
 * NEW FILTERS
-				- Perspective
-								- Bilinear filter.
-								- EWA filter.
 
 * NEW INTERPOLATORS
-				- Linear
-				- Trilinear
+	- Linear
+	- Trilinear
 
 * GUI
-				- Enable users to change parameters of filters.
+	- Enable users to change parameters of filters.
 

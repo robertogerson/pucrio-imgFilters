@@ -188,7 +188,7 @@ void ewaFilter ( Image *img, double U0, double V0,
   }
   else
   {
-	  printf("EWA works\n");
+	  //printf("EWA works\n");
     rgb[0] = (float)NUM[0]/DEN;
     rgb[1] = (float)NUM[1]/DEN;
     rgb[2] = (float)NUM[2]/DEN;

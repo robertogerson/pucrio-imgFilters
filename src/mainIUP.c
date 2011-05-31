@@ -83,14 +83,25 @@ static char * get_new_file_name( void )
 static void update_dialog_size(void)
 {
    if (image1) {
-        int w,h;
+      int w,h;
       char buffer[512];
-      w=imgGetWidth(image1);
-      h=imgGetHeight(image1);
+      
+			w = imgGetWidth(image1);
+      h = imgGetHeight(image1);
       sprintf(buffer,"%dx%d",w,h);
-      IupSetAttribute(left_canvas, IUP_RASTERSIZE, buffer);
-      IupSetAttribute(right_canvas, IUP_RASTERSIZE, buffer);
-      IupSetAttribute(dialog, IUP_RASTERSIZE, NULL);
+
+      IupSetAttribute(left_canvas, "SCROLLBAR", "VERTICAL");
+			IupSetAttribute(right_canvas, "SCROLLBAR", "VERTICAL");
+
+      IupSetAttribute(left_canvas, "XMAX", "800");
+      IupSetAttribute(left_canvas, "YMAX", "600");
+			IupSetAttribute(right_canvas, "XMAX", "800");
+			IupSetAttribute(right_canvas, "YMAX", "600");
+
+     // IupSetAttribute(left_canvas, IUP_RASTERSIZE, buffer);
+     // IupSetAttribute(right_canvas, IUP_RASTERSIZE, buffer);
+
+//      IupSetAttribute(dialog, IUP_RASTERSIZE, NULL);
       IupShowXY(dialog, IUP_CENTER, IUP_CENTER);
    }
 }
@@ -616,20 +627,22 @@ int load_cb(void) {
 
   if (filename==NULL) return 0;
 
-  if (strstr(filename,".bmp")||strstr(filename,".BMP")){
+  if (strstr(filename,".bmp")||strstr(filename,".BMP"))
+	{
       /* le nova imagem */
-      if (image1) imgDestroy(image1);
+    if (image1) imgDestroy(image1);
       image1 = imgReadBMP(filename);
-      if (image2) imgDestroy(image2);
+    if (image2) imgDestroy(image2);
       image2 = imgCopy(image1);
-      }
-  else if (strstr(filename,".pfm")||strstr(filename,".PFM")){
+  }
+  else if (strstr(filename,".pfm")||strstr(filename,".PFM"))
+	{
        /* le nova imagem */
-      if (image1) imgDestroy(image1);
+    if (image1) imgDestroy(image1);
       image1 = imgReadPFM(filename);
-      if (image2) imgDestroy(image2);
+    if (image2) imgDestroy(image2);
       image2 = imgCopy(image1);
-      }
+  }
   else
       IupMessage("Aviso","Formato do arquivo de imagem não reconhecido\n");
  
